@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazel-service
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: hazel
+  ports:
+  - port: 5701
+    name: hazelcast
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-service
+spec:
+  type: ClusterIP
+  selector:
+    app: hazel
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hazel-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hazel
+  template:
+    metadata:
+      labels:
+        app: hazel
+    spec:
+      containers:
+      - name: hazel
+        image: acjoshi/hazelcast
+        imagePullPolicy: Always
+        env:
+          - name: KUBERNETES-NAMESPACE
+            value: hazel-test
+          - name: KUBERNETES-SERVICE
+            value: hazel-service
+        ports:
+        - containerPort: 5701
